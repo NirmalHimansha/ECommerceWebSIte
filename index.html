@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ShopHub - Your online shopping destination for quality products">
+    <meta name="keywords" content="online shop, e-commerce, products, shopping">
+    <title>ShopHub - Modern Online Store</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const Search = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>;
+        const ShoppingCart = (props) => <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>;
+        const Menu = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>;
+        const X = (props) => <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>;
+        const Plus = (props) => <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>;
+        const Edit2 = (props) => <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>;
+        const Trash2 = (props) => <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>;
+        const LogOut = (props) => <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>;
+        const Eye = (props) => <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>;
+        const EyeOff = (props) => <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>;
+
+        // Storage Mock (for local testing without window.storage)
+        const mockStorage = {
+            data: {},
+            async get(key) {
+                const value = this.data[key] || localStorage.getItem(key);
+                return value ? { key, value, shared: false } : null;
+            },
+            async set(key, value) {
+                this.data[key] = value;
+                localStorage.setItem(key, value);
+                return { key, value, shared: false };
+            },
+            async delete(key) {
+                delete this.data[key];
+                localStorage.removeItem(key);
+                return { key, deleted: true, shared: false };
+            },
+            async list(prefix) {
+                const keys = Object.keys(this.data).filter(k => !prefix || k.startsWith(prefix));
+                return { keys, prefix, shared: false };
+            }
+        };
+
+        const storage = window.storage || mockStorage;
+
+        function ECommerceApp() {
+          const [products, setProducts] = useState([]);
+          const [categories, setCategories] = useState([]);
+          const [isAdmin, setIsAdmin] = useState(false);
+          const [showAdminLogin, setShowAdminLogin] = useState(false);
+          const [currentView, setCurrentView] = useState('home');
+          const [selectedCategory, setSelectedCategory] = useState('all');
+          const [searchQuery, setSearchQuery] = useState('');
+          const [selectedProduct, setSelectedProduct] = useState(null);
+          const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+          useEffect(() => {
+            loadData();
+          }, []);
+
+          const loadData = async () => {
+            try {
+              const productsResult = await storage.get('products');
+              const categoriesResult = await storage.get('categories');
+              
+              if (productsResult?.value) {
+                setProducts(JSON.parse(productsResult.value));
+              } else {
+                const sampleProducts = [
+                  {
+                    id: '1',
+                    name: 'Premium Wireless Headphones',
+                    price: 64999,
+                    category: 'Electronics',
+                    description: 'High-quality wireless headphones with noise cancellation and 30-hour battery life.',
+                    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop'
+                  },
+                  {
+                    id: '2',
+                    name: 'Smart Watch Pro',
+                    price: 97500,
+                    category: 'Electronics',
+                    description: 'Advanced fitness tracking, heart rate monitoring, and smartphone notifications.',
+                    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop'
+                  },
+                  {
+                    id: '3',
+                    name: 'Designer Backpack',
+                    price: 29250,
+                    category: 'Fashion',
+                    description: 'Stylish and durable backpack perfect for daily commute or travel.',
+                    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=500&fit=crop'
+                  }
+                ];
+                setProducts(sampleProducts);
+                await storage.set('products', JSON.stringify(sampleProducts));
+              }
+
+              if (categoriesResult?.value) {
+                setCategories(JSON.parse(categoriesResult.value));
+              } else {
+                const sampleCategories = ['Electronics', 'Fashion', 'Home & Garden', 'Sports'];
+                setCategories(sampleCategories);
+                await storage.set('categories', JSON.stringify(sampleCategories));
+              }
+            } catch (error) {
+              console.error('Error loading data:', error);
+            }
+          };
+
+          const saveProducts = async (newProducts) => {
+            try {
+              await storage.set('products', JSON.stringify(newProducts));
+              setProducts(newProducts);
+            } catch (error) {
+              console.error('Error saving products:', error);
+              alert('Failed to save products. Please try again.');
+            }
+          };
+
+          const filteredProducts = products.filter(product => {
+            const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                 product.description.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+            return matchesSearch && matchesCategory;
+          });
+
+          return (
+            <div className="min-h-screen bg-gray-50">
+              {!isAdmin ? (
+                <CustomerView
+                  products={filteredProducts}
+                  categories={categories}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  selectedProduct={selectedProduct}
+                  setSelectedProduct={setSelectedProduct}
+                  showMobileMenu={showMobileMenu}
+                  setShowMobileMenu={setShowMobileMenu}
+                  showAdminLogin={showAdminLogin}
+                  setShowAdminLogin={setShowAdminLogin}
+                  setIsAdmin={setIsAdmin}
+                  currentView={currentView}
+                  setCurrentView={setCurrentView}
+                />
+              ) : (
+                <AdminDashboard
+                  products={products}
+                  setProducts={saveProducts}
+                  categories={categories}
+                  setCategories={setCategories}
+                  setIsAdmin={setIsAdmin}
+                />
+              )}
+            </div>
+          );
+        }
+
+        function CustomerView({ 
+          products, 
+          categories, 
+          selectedCategory, 
+          setSelectedCategory,
+          searchQuery,
+          setSearchQuery,
+          selectedProduct,
+          setSelectedProduct,
+          showMobileMenu,
+          setShowMobileMenu,
+          showAdminLogin,
+          setShowAdminLogin,
+          setIsAdmin,
+          currentView,
+          setCurrentView
+        }) {
+          return (
+            <>
+              <Navbar 
+                setShowMobileMenu={setShowMobileMenu}
+                showMobileMenu={showMobileMenu}
+                setShowAdminLogin={setShowAdminLogin}
+                setCurrentView={setCurrentView}
+              />
+              
+              {currentView === 'home' && (
+                <>
+                  <HeroSection setCurrentView={setCurrentView} />
+                  <FeaturedProducts products={products.slice(0, 3)} setSelectedProduct={setSelectedProduct} />
+                </>
+              )}
+
+              {currentView === 'products' && (
+                <ProductsSection
+                  products={products}
+                  categories={categories}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  setSelectedProduct={setSelectedProduct}
+                />
+              )}
+
+              {currentView === 'contact' && <ContactSection />}
+
+              {selectedProduct && (
+                <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
+              )}
+
+              {showAdminLogin && (
+                <AdminLogin onClose={() => setShowAdminLogin(false)} setIsAdmin={setIsAdmin} />
+              )}
+
+              <Footer />
+            </>
+          );
+        }
+
+        function Navbar({ setShowMobileMenu, showMobileMenu, setShowAdminLogin, setCurrentView }) {
+          return (
+            <nav className="bg-white shadow-md sticky top-0 z-40">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center h-16">
+                  <div className="flex items-center cursor-pointer" onClick={() => setCurrentView('home')}>
+                    <ShoppingCart className="h-8 w-8 text-blue-600" />
+                    <span className="ml-2 text-2xl font-bold text-gray-900">ShopHub</span>
+                  </div>
+
+                  <div className="hidden md:flex items-center space-x-8">
+                    <button onClick={() => setCurrentView('home')} className="text-gray-700 hover:text-blue-600 transition">Home</button>
+                    <button onClick={() => setCurrentView('products')} className="text-gray-700 hover:text-blue-600 transition">Products</button>
+                    <button onClick={() => setCurrentView('contact')} className="text-gray-700 hover:text-blue-600 transition">Contact</button>
+                    <button onClick={() => setShowAdminLogin(true)} className="text-sm text-gray-500 hover:text-blue-600">Admin</button>
+                  </div>
+
+                  <button onClick={() => setShowMobileMenu(!showMobileMenu)} className="md:hidden">
+                    {showMobileMenu ? <X className="h-6 w-6" /> : <Menu />}
+                  </button>
+                </div>
+              </div>
+
+              {showMobileMenu && (
+                <div className="md:hidden bg-white border-t">
+                  <div className="px-2 pt-2 pb-3 space-y-1">
+                    <button onClick={() => { setCurrentView('home'); setShowMobileMenu(false); }} className="block w-full text-left px-3 py-2 text-gray-700 hover:bg-gray-100">Home</button>
+                    <button onClick={() => { setCurrentView('products'); setShowMobileMenu(false); }} className="block w-full text-left px-3 py-2 text-gray-700 hover:bg-gray-100">Products</button>
+                    <button onClick={() => { setCurrentView('contact'); setShowMobileMenu(false); }} className="block w-full text-left px-3 py-2 text-gray-700 hover:bg-gray-100">Contact</button>
+                    <button onClick={() => { setShowAdminLogin(true); setShowMobileMenu(false); }} className="block w-full text-left px-3 py-2 text-gray-500 hover:bg-gray-100">Admin Login</button>
+                  </div>
+                </div>
+              )}
+            </nav>
+          );
+        }
+
+        function HeroSection({ setCurrentView }) {
+          return (
+            <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
+                <div className="text-center">
+                  <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fade-in">
+                    Welcome to ShopHub
+                  </h1>
+                  <p className="text-xl md:text-2xl mb-8 text-blue-100">
+                    Discover amazing products at unbeatable prices
+                  </p>
+                  <button 
+                    onClick={() => setCurrentView('products')}
+                    className="bg-white text-blue-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transition transform hover:scale-105 shadow-lg"
+                  >
+                    Shop Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        function FeaturedProducts({ products, setSelectedProduct }) {
+          return (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+              <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Featured Products</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {products.map(product => (
+                  <ProductCard key={product.id} product={product} onClick={() => setSelectedProduct(product)} />
+                ))}
+              </div>
+            </div>
+          );
+        }
+
+        function ProductsSection({ 
+          products, 
+          categories, 
+          selectedCategory, 
+          setSelectedCategory,
+          searchQuery,
+          setSearchQuery,
+          setSelectedProduct 
+        }) {
+          return (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+              <h1 className="text-4xl font-bold text-gray-900 mb-8">Our Products</h1>
+              
+              <div className="mb-8 space-y-4">
+                <div className="relative">
+                  <div className="absolute left-3 top-3">
+                    <Search />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setSelectedCategory('all')}
+                    className={`px-4 py-2 rounded-full transition ${
+                      selectedCategory === 'all' 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-white text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    All
+                  </button>
+                  {categories.map(category => (
+                    <button
+                      key={category}
+                      onClick={() => setSelectedCategory(category)}
+                      className={`px-4 py-2 rounded-full transition ${
+                        selectedCategory === category 
+                          ? 'bg-blue-600 text-white' 
+                          : 'bg-white text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {products.map(product => (
+                  <ProductCard key={product.id} product={product} onClick={() => setSelectedProduct(product)} />
+                ))}
+              </div>
+
+              {products.length === 0 && (
+                <div className="text-center py-16">
+                  <p className="text-gray-500 text-lg">No products found</p>
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        function ProductCard({ product, onClick }) {
+          return (
+            <div 
+              onClick={onClick}
+              className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer transform transition hover:scale-105 hover:shadow-xl"
+            >
+              <img src={product.image} alt={product.name} className="w-full h-48 object-cover" />
+              <div className="p-4">
+                <h3 className="font-semibold text-lg text-gray-900 mb-2">{product.name}</h3>
+                <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-2xl font-bold text-blue-600">Rs. {product.price.toLocaleString()}</span>
+                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">{product.category}</span>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        function ProductModal({ product, onClose }) {
+          return (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+              <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                <div className="relative">
+                  <button onClick={onClose} className="absolute top-4 right-4 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100">
+                    <X className="h-6 w-6" />
+                  </button>
+                  <img src={product.image} alt={product.name} className="w-full h-64 object-cover" />
+                </div>
+                <div className="p-6">
+                  <span className="text-sm bg-gray-100 text-gray-600 px-3 py-1 rounded-full">{product.category}</span>
+                  <h2 className="text-3xl font-bold text-gray-900 mt-4 mb-2">{product.name}</h2>
+                  <p className="text-4xl font-bold text-blue-600 mb-4">Rs. {product.price.toLocaleString()}</p>
+                  <p className="text-gray-700 mb-6">{product.description}</p>
+                  <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        function ContactSection() {
+          return (
+            <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+              <h1 className="text-4xl font-bold text-gray-900 mb-8 text-center">Contact Us</h1>
+              <div className="bg-white rounded-lg shadow-md p-8">
+                <form className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                    <input type="text" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                    <textarea rows="5" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                  </div>
+                  <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                    Send Message
+                  </button>
+                </form>
+              </div>
+            </div>
+          );
+        }
+
+        function Footer() {
+          return (
+            <footer className="bg-gray-900 text-white py-8 mt-16">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <p>&copy; 2025 ShopHub. All rights reserved.</p>
+              </div>
+            </footer>
+          );
+        }
+
+        function AdminLogin({ onClose, setIsAdmin }) {
+          const [username, setUsername] = useState('');
+          const [password, setPassword] = useState('');
+          const [showPassword, setShowPassword] = useState(false);
+          const [error, setError] = useState('');
+
+          const handleLogin = (e) => {
+            e.preventDefault();
+            if (username === 'admin' && password === 'admin123') {
+              setIsAdmin(true);
+              onClose();
+            } else {
+              setError('Invalid credentials. Try admin/admin123');
+            }
+          };
+
+          return (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+              <div className="bg-white rounded-lg max-w-md w-full p-8" onClick={(e) => e.stopPropagation()}>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Admin Login</h2>
+                {error && <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4">{error}</div>}
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-2.5"
+                      >
+                        {showPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
+                      </button>
+                    </div>
+                  </div>
+                  <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                    Login
+                  </button>
+                </form>
+                <p className="text-sm text-gray-500 mt-4 text-center">Demo: admin / admin123</p>
+              </div>
+            </div>
+          );
+        }
+
+        function AdminDashboard({ products, setProducts, categories, setCategories, setIsAdmin }) {
+          const [showProductForm, setShowProductForm] = useState(false);
+          const [editingProduct, setEditingProduct] = useState(null);
+
+          const handleDelete = async (id) => {
+            if (confirm('Are you sure you want to delete this product?')) {
+              const updated = products.filter(p => p.id !== id);
+              await setProducts(updated);
+            }
+          };
+
+          const handleEdit = (product) => {
+            setEditingProduct(product);
+            setShowProductForm(true);
+          };
+
+          return (
+            <div className="min-h-screen bg-gray-100">
+              <div className="bg-white shadow-md">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                  <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+                  <button onClick={() => setIsAdmin(false)} className="flex items-center text-gray-600 hover:text-gray-900">
+                    <LogOut className="h-5 w-5 mr-2" />
+                    Logout
+                  </button>
+                </div>
+              </div>
+
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold">Manage Products</h2>
+                  <button
+                    onClick={() => { setEditingProduct(null); setShowProductForm(true); }}
+                    className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                  >
+                    <Plus className="h-5 w-5 mr-2" />
+                    Add Product
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {products.map(product => (
+                    <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                      <img src={product.image} alt={product.name} className="w-full h-48 object-cover" />
+                      <div className="p-4">
+                        <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
+                        <p className="text-gray-600 text-sm mb-2">{product.description}</p>
+                        <p className="text-xl font-bold text-blue-600 mb-4">Rs. {product.price.toLocaleString()}</p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEdit(product)}
+                            className="flex-1 flex items-center justify-center bg-gray-100 text-gray-700 px-3 py-2 rounded hover:bg-gray-200 transition"
+                          >
+                            <Edit2 className="h-4 w-4 mr-1" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(product.id)}
+                            className="flex-1 flex items-center justify-center bg-red-100 text-red-700 px-3 py-2 rounded hover:bg-red-200 transition"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {products.length === 0 && (
+                  <div className="text-center py-16 bg-white rounded-lg">
+                    <p className="text-gray-500 text-lg">No products yet. Add your first product!</p>
+                  </div>
+                )}
+              </div>
+
+              {showProductForm && (
+                <ProductForm
+                  product={editingProduct}
+                  products={products}
+                  setProducts={setProducts}
+                  categories={categories}
+                  onClose={() => { setShowProductForm(false); setEditingProduct(null); }}
+                />
+              )}
+            </div>
+          );
+        }
+
+        function ProductForm({ product, products, setProducts, categories, onClose }) {
+          const [formData, setFormData] = useState({
+            name: product?.name || '',
+            price: product?.price || '',
+            category: product?.category || categories[0] || '',
+            description: product?.description || '',
+            image: product?.image || ''
+          });
+
+          const handleSubmit = async (e) => {
+            e.preventDefault();
+            
+            if (!formData.name || !formData.price || !formData.description || !formData.image) {
+              alert('Please fill in all fields');
+              return;
+            }
+
+            const productData = {
+              ...formData,
+              price: parseFloat(formData.price),
+              id: product?.id || Date.now().toString()
+            };
+
+            let updated;
+            if (product) {
+              updated = products.map(p => p.id === product.id ? productData : p);
+            } else {
+              updated = [...products, productData];
+            }
+
+            await setProducts(updated);
+            onClose();
+          };
+
+          return (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+              <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                <div className="p-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">{product ? 'Edit Product' : 'Add New Product'}</h2>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Product Name</label>
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Price (LKR)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.price}
+                        onChange={(e) => setFormData({...formData, price: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                      <select
+                        value={formData.category}
+                        onChange={(e) => setFormData({...formData, category: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        {categories.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                      <textarea
+                        value={formData.description}
+                        onChange={(e) => setFormData({...formData, description: e.target.value})}
+                        rows="4"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Image URL</label>
+                      <input
+                        type="url"
+                        value={formData.image}
+                        onChange={(e) => setFormData({...formData, image: e.target.value})}
+                        placeholder="https://example.com/image.jpg"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                      {formData.image && (
+                        <img src={formData.image} alt="Preview" className="mt-2 h-32 object-cover rounded" />
+                      )}
+                    </div>
+
+                    <div className="flex gap-3 pt-4">
+                      <button
+                        type="submit"
+                        className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+                      >
+                        {product ? 'Update Product' : 'Add Product'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        ReactDOM.render(<ECommerceApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
